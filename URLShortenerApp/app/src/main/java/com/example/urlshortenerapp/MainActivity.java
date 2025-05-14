@@ -2,6 +2,7 @@ package com.example.urlshortenerapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         // Extraer el shortUrl desde el JSON de la respuesta
                         String responseBody = response.body().string();
+                        Log.d("RESPUESTA_BACKEND", responseBody);
                         org.json.JSONObject json = new org.json.JSONObject(responseBody);
                         String shortUrl = json.getString("shortUrl");
 
