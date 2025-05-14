@@ -17,6 +17,7 @@ import com.example.urlshortenerapp.databinding.ActivityMainBinding;
 
 import java.util.Random;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,30 +53,40 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String shortCode = UrlUtils.generateShortCode();
-        String shortenedUrl = "http://localhost:5000/" + shortCode;
-
         UrlShortenerApi api = RetrofitClient.getInstance().create(UrlShortenerApi.class);
         UrlShortenerApi.ShortenRequest request = new UrlShortenerApi.ShortenRequest(originalUrl, shortCode);
 
-        api.shortenUrl(request).enqueue(new retrofit2.Callback<Void>() {
+        api.shortenUrl(request).enqueue(new retrofit2.Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call<Void> call, retrofit2.Response<Void> response) {
-                if (response.isSuccessful()) {
-                    runOnUiThread(() -> {
-                        binding.tvShortenedUrl.setText("URL acortada: " + shortenedUrl);
-                        Toast.makeText(MainActivity.this, "URL enviada al servidor", Toast.LENGTH_SHORT).show();
-                    });
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        // Extraer el shortUrl desde el JSON de la respuesta
+                        String responseBody = response.body().string();
+                        org.json.JSONObject json = new org.json.JSONObject(responseBody);
+                        String shortUrl = json.getString("shortUrl");
+
+                        runOnUiThread(() -> {
+                            binding.tvShortenedUrl.setText("URL acortada: " + shortUrl);
+                            Toast.makeText(MainActivity.this, "URL enviada al servidor", Toast.LENGTH_SHORT).show();
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(MainActivity.this, "Error al leer la respuesta", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     Toast.makeText(MainActivity.this, "Error al acortar URL", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Toast.makeText(MainActivity.this, "Fallo: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
+
 
 
 

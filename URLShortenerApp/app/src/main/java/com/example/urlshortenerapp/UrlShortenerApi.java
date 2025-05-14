@@ -1,5 +1,6 @@
 package com.example.urlshortenerapp;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
@@ -7,7 +8,7 @@ import retrofit2.http.POST;
 public interface UrlShortenerApi {
 
     @POST("/shorten")
-    Call<Void> shortenUrl(@Body ShortenRequest request);
+    Call<ResponseBody> shortenUrl(@Body ShortenRequest request);
 
     class ShortenRequest {
         String originalUrl;
