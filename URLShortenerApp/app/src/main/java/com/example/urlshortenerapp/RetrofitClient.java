@@ -4,7 +4,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
-    private static final String BASE_URL = "https://urlshortener-production-3cf7.up.railway.app/"; // ✅ TU URL EN RAILWAY
+    public static final String BASE_URL = "https://urlshortener-production-3cf7.up.railway.app";
     private static Retrofit retrofit;
 
     public static Retrofit getInstance() {

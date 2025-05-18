@@ -62,29 +62,36 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        // Extraer el shortUrl desde el JSON de la respuesta
                         String responseBody = response.body().string();
                         Log.d("RESPUESTA_BACKEND", responseBody);
+
                         org.json.JSONObject json = new org.json.JSONObject(responseBody);
-                        String shortUrl = json.getString("shortUrl");
+
+                        // Maneja ambos casos por si acaso
+                        String shortUrl = json.has("shortUrl") ?
+                                json.getString("shortUrl") :
+                                RetrofitClient.BASE_URL + "/" + request.shortCode;
 
                         runOnUiThread(() -> {
                             binding.tvShortenedUrl.setText("URL acortada: " + shortUrl);
-                            Toast.makeText(MainActivity.this, "URL enviada al servidor", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "URL acortada creada", Toast.LENGTH_SHORT).show();
                         });
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        Toast.makeText(MainActivity.this, "Error al leer la respuesta", Toast.LENGTH_SHORT).show();
+                        runOnUiThread(() ->
+                                Toast.makeText(MainActivity.this, "Error al procesar respuesta", Toast.LENGTH_SHORT).show());
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "Error al acortar URL", Toast.LENGTH_SHORT).show();
+                    runOnUiThread(() ->
+                            Toast.makeText(MainActivity.this, "Error del servidor", Toast.LENGTH_SHORT).show());
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Fallo: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                runOnUiThread(() ->
+                        Toast.makeText(MainActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
     }
