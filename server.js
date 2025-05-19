@@ -66,7 +66,7 @@ app.post('/shorten', async (req, res) => {
 
     res.json({ 
       message: 'URL acortada guardada exitosamente',
-      shortUrl: `https://urlshortener-production-3cf7.up.railway.app${shortCode}`
+      shortUrl: `https://urlshortener-production-3cf7.up.railway.app/${shortCode}`
     });
   } catch (error) {
     console.error("Error al acortar URL:", error);
