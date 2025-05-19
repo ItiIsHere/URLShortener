@@ -18,7 +18,7 @@
 
         <activity
             android:name="com.example.urlshortenerapp.MainActivity"
-            android:label="Home"
+            android:label="URLShortener"
             android:exported="true"
             android:usesCleartextTraffic="true">
             <intent-filter>
