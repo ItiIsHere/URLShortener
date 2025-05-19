@@ -5,13 +5,17 @@ const { Pool } = require('pg');
 const admin = require('./firebase-admin');
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8080;
 
 // Configuración de PostgreSQL
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
+
+pool.query('SELECT NOW()')
+  .then(() => console.log("PostgreSQL conectado"))
+  .catch(err => console.error("Error conectando a PostgreSQL:", err));
 
 // Inicialización de la base de datos
 async function initDB() {
@@ -114,15 +118,25 @@ app.use((err, req, res, next) => {
 
 // Iniciar servidor
 async function startServer() {
-  try {
-    await initDB();
-    app.listen(port, () => {
-        console.log(`Servidor corriendo en el puerto: ${port}`);
+    try {
+      await initDB();
+      const server = app.listen(port, () => {
+        console.log(`🚀 Servidor listo en puerto ${port}`);
       });
-  } catch (err) {
-    console.error("No se pudo iniciar el servidor:", err);
-    process.exit(1);
+  
+      // Manejo adecuado de cierres
+      process.on('SIGTERM', () => {
+        console.log('Recibido SIGTERM. Cerrando servidor...');
+        server.close(() => {
+          pool.end();
+          console.log('Conexiones cerradas');
+          process.exit(0);
+        });
+      });
+    } catch (err) {
+      console.error("No se pudo iniciar:", err);
+      process.exit(1);
+    }
   }
-}
 
 startServer();
