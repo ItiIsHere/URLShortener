@@ -29,24 +29,12 @@ public class UpgradeActivity extends AppCompatActivity {
             String cvv = etCvv.getText().toString();
 
             if (cardNumber.length() >= 16 && expiry.length() >= 4 && cvv.length() >= 3) {
-                UserManager.getInstance(this).upgradeToPremium(this, new UserManager.OnPremiumCheckedListener() {
-                    @Override
-                    public void onChecked(boolean isPremium) {
-                        if (isPremium) {
-                            Toast.makeText(UpgradeActivity.this, "¡Ahora eres Premium!", Toast.LENGTH_SHORT).show();
-                            finish();
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        Toast.makeText(UpgradeActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                UserManager.getInstance(this).upgradeToPremium();
+                Toast.makeText(this, "¡Bienvenido a Premium!", Toast.LENGTH_SHORT).show();
+                finish();
             } else {
-                Toast.makeText(this, "Datos de tarjeta incompletos", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Datos incompletos", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 }

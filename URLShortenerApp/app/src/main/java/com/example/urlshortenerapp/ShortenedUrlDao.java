@@ -22,10 +22,4 @@ public interface ShortenedUrlDao {
 
     @Query("SELECT COUNT(*) FROM shortened_urls")
     int getUrlCount();
-
-    @Query("SELECT * FROM shortened_urls WHERE userId = :userId ORDER BY timestamp DESC")
-    LiveData<List<ShortenedUrl>> getUrlsByUser(String userId);
-
-    @Query("SELECT COUNT(*) FROM shortened_urls WHERE userId = :userId")
-    int getUrlCountForUser(String userId);
 }

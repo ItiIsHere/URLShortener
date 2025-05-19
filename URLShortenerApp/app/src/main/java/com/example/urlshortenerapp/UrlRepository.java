@@ -33,6 +33,10 @@ public class UrlRepository {
         allUrls = shortenedUrlDao.getAllUrls();
     }
 
+    public void insertUrl(ShortenedUrl url) {
+        new InsertUrlAsyncTask(shortenedUrlDao).execute(url);
+    }
+
     public void deleteUrl(int urlId) {
         new DeleteUrlAsyncTask(shortenedUrlDao).execute(urlId);
     }
@@ -43,15 +47,6 @@ public class UrlRepository {
 
     public int getUrlCount() {
         return shortenedUrlDao.getUrlCount();
-    }
-
-    public LiveData<List<ShortenedUrl>> getUrlsForUser(String userId) {
-        return shortenedUrlDao.getUrlsByUser(userId);
-    }
-
-
-    public void insertUrl(ShortenedUrl url) {
-        new InsertUrlAsyncTask(shortenedUrlDao).execute(url);
     }
 
     private static class InsertUrlAsyncTask extends AsyncTask<ShortenedUrl, Void, Void> {

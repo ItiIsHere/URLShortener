@@ -13,8 +13,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.urlshortener.R;
-import com.google.firebase.auth.FirebaseAuth;
-
 import org.json.JSONObject;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -30,16 +28,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() == null) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return;
-        }
-
         setContentView(R.layout.activity_main);
 
+        // Inicialización de vistas
         urlRepository = new UrlRepository(this);
         etOriginalUrl = findViewById(R.id.etOriginalUrl);
         tvShortenedUrl = findViewById(R.id.tvShortenedUrl);
@@ -49,29 +40,20 @@ public class MainActivity extends AppCompatActivity {
         btnHistory = findViewById(R.id.btnHistory);
         btnUpgrade = findViewById(R.id.btnUpgrade);
 
+        // Configurar listeners
         btnShorten.setOnClickListener(v -> shortenUrl());
         btnCopy.setOnClickListener(v -> copyToClipboard());
         btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
         btnUpgrade.setOnClickListener(v -> startActivity(new Intent(this, UpgradeActivity.class)));
 
+        // Actualizar estado inicial
         updateUserStatusUI();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        UserManager.getInstance(this).checkPremiumStatus(this, new UserManager.OnPremiumCheckedListener() {
-            @Override
-            public void onChecked(boolean isPremium) {
-                updateUserStatusUI();
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                Toast.makeText(MainActivity.this, "Error al verificar estado", Toast.LENGTH_SHORT).show();
-            }
-        });
+        updateUserStatusUI();
     }
 
     private void updateUserStatusUI() {
@@ -124,9 +106,6 @@ public class MainActivity extends AppCompatActivity {
                         urlEntity.shortUrl = shortUrl;
                         urlEntity.timestamp = System.currentTimeMillis();
                         urlRepository.insertUrl(urlEntity);
-                        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                        urlEntity.userId = userId;
-
 
                         // Actualizar UI
                         runOnUiThread(() -> {

@@ -10,11 +10,6 @@ public interface UrlShortenerApi {
     @POST("/shorten")
     Call<ResponseBody> shortenUrl(@Body ShortenRequest request);
 
-    @POST("/api/users")
-    Call<UserStatusResponse> checkUserStatus(@Body TokenRequest request);
-
-    @POST("/api/users/upgrade")
-    Call<Void> upgradeToPremium(@Body TokenRequest request);
     class ShortenRequest {
         String originalUrl;
         String shortCode;

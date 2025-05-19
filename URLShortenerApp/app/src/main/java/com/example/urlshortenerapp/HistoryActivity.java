@@ -20,12 +20,15 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        Button btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish()); // Cierra esta actividad y regresa a la anterior
+
+        urlRepository = new UrlRepository(this);
+        recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        UrlRepository urlRepository = new UrlRepository(this);
         urlRepository.getAllUrls().observe(this, urls -> {
-            UrlAdapter adapter = new UrlAdapter(urls, urlRepository);
+            adapter = new UrlAdapter(urls, urlRepository);
             recyclerView.setAdapter(adapter);
         });
     }

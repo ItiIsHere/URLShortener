@@ -17,15 +17,6 @@
         tools:targetApi="31">
 
         <activity
-            android:name="com.example.urlshortenerapp.LoginActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:name="com.example.urlshortenerapp.MainActivity"
             android:label="Home"
             android:exported="true"
