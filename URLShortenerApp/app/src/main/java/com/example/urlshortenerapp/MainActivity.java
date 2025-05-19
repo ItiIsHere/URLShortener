@@ -124,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
                         urlEntity.shortUrl = shortUrl;
                         urlEntity.timestamp = System.currentTimeMillis();
                         urlRepository.insertUrl(urlEntity);
+                        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        urlEntity.userId = userId;
+
 
                         // Actualizar UI
                         runOnUiThread(() -> {

@@ -49,6 +49,7 @@ public class UrlRepository {
         return shortenedUrlDao.getUrlsByUser(userId);
     }
 
+
     public void insertUrl(ShortenedUrl url) {
         new InsertUrlAsyncTask(shortenedUrlDao).execute(url);
     }
