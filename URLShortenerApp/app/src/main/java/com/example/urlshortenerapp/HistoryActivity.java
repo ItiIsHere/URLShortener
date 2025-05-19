@@ -20,10 +20,12 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
-        String userId = UserManager.getInstance(this).getUserId();
-        urlRepository = new UrlRepository(this);
-        urlRepository.getUrlsForUser(userId).observe(this, urls -> {
-            adapter = new UrlAdapter(urls, urlRepository);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        UrlRepository urlRepository = new UrlRepository(this);
+        urlRepository.getAllUrls().observe(this, urls -> {
+            UrlAdapter adapter = new UrlAdapter(urls, urlRepository);
             recyclerView.setAdapter(adapter);
         });
     }
