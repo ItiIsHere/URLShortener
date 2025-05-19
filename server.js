@@ -117,8 +117,8 @@ async function startServer() {
   try {
     await initDB();
     app.listen(port, () => {
-      console.log(`Servidor corriendo en http://localhost:${port}`);
-    });
+        console.log(`Servidor corriendo en el puerto: ${port}`);
+      });
   } catch (err) {
     console.error("No se pudo iniciar el servidor:", err);
     process.exit(1);
