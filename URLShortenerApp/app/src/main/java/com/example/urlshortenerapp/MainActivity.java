@@ -5,18 +5,15 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.urlshortener.R;
-
 import org.json.JSONObject;
-
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,8 +21,8 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private EditText etOriginalUrl;
-    private TextView tvShortenedUrl;
-    private Button btnShorten, btnCopy;
+    private TextView tvShortenedUrl, tvUserStatus;
+    private Button btnShorten, btnCopy, btnHistory, btnUpgrade;
     private UrlRepository urlRepository;
 
     @Override
@@ -33,24 +30,49 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Inicialización de vistas
         urlRepository = new UrlRepository(this);
-
         etOriginalUrl = findViewById(R.id.etOriginalUrl);
         tvShortenedUrl = findViewById(R.id.tvShortenedUrl);
+        tvUserStatus = findViewById(R.id.tvUserStatus);
         btnShorten = findViewById(R.id.btnShorten);
         btnCopy = findViewById(R.id.btnCopy);
+        btnHistory = findViewById(R.id.btnHistory);
+        btnUpgrade = findViewById(R.id.btnUpgrade);
 
+        // Configurar listeners
         btnShorten.setOnClickListener(v -> shortenUrl());
         btnCopy.setOnClickListener(v -> copyToClipboard());
+        btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
+        btnUpgrade.setOnClickListener(v -> startActivity(new Intent(this, UpgradeActivity.class)));
 
-        Button btnHistory = findViewById(R.id.btnHistory);
-        btnHistory.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, HistoryActivity.class));
-        });
+        // Actualizar estado inicial
+        updateUserStatusUI();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateUserStatusUI();
+    }
+
+    private void updateUserStatusUI() {
+        UserManager userManager = UserManager.getInstance(this);
+        if (userManager.isPremium()) {
+            tvUserStatus.setText("Estado: Premium");
+            tvUserStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            btnUpgrade.setVisibility(View.GONE);
+        } else {
+            tvUserStatus.setText(String.format("Estado: Free (%d/%d URLs)",
+                    userManager.getUrlsCount(),
+                    userManager.getUrlsLimit()));
+            tvUserStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            btnUpgrade.setVisibility(View.VISIBLE);
+        }
     }
 
     private void shortenUrl() {
+        UserManager userManager = UserManager.getInstance(this);
         String originalUrl = etOriginalUrl.getText().toString().trim();
 
         if (originalUrl.isEmpty()) {
@@ -58,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (!UserManager.getInstance().canCreateMoreUrls()) {
-            Toast.makeText(this, "Límite mensual alcanzado (5 URLs)", Toast.LENGTH_SHORT).show();
+        if (!userManager.canCreateMoreUrls()) {
+            showUpgradeDialog();
             return;
         }
 
@@ -74,20 +96,22 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         String responseBody = response.body().string();
                         JSONObject json = new JSONObject(responseBody);
-
                         String shortUrl = json.has("shortUrl") ?
                                 json.getString("shortUrl") :
                                 RetrofitClient.BASE_URL + "/" + request.shortCode;
 
-
+                        // Guardar en base de datos
                         ShortenedUrl urlEntity = new ShortenedUrl();
                         urlEntity.originalUrl = originalUrl;
                         urlEntity.shortUrl = shortUrl;
                         urlEntity.timestamp = System.currentTimeMillis();
                         urlRepository.insertUrl(urlEntity);
 
+                        // Actualizar UI
                         runOnUiThread(() -> {
                             tvShortenedUrl.setText("URL acortada: " + shortUrl);
+                            userManager.incrementUrlCount();
+                            updateUserStatusUI();
                             Toast.makeText(MainActivity.this, "URL acortada creada", Toast.LENGTH_SHORT).show();
                         });
 
@@ -105,6 +129,17 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    private void showUpgradeDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Límite alcanzado")
+                .setMessage("Has alcanzado el límite de 5 URLs este mes. ¿Deseas hacerte Premium para URLs ilimitadas?")
+                .setPositiveButton("Hacerme Premium", (dialog, which) ->
+                        startActivity(new Intent(this, UpgradeActivity.class)))
+                .setNegativeButton("Cancelar", null)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .show();
     }
 
     private void copyToClipboard() {

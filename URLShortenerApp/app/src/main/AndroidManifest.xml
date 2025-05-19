@@ -32,6 +32,11 @@
             android:label="Historial de URLs"
             android:exported="false" />
 
+        <activity
+            android:name="com.example.urlshortenerapp.UpgradeActivity"
+            android:label="Hacerse Premium"
+            android:exported="false" />
+
 
     </application>
 
