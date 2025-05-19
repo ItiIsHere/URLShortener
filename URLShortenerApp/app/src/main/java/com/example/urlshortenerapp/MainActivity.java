@@ -1,55 +1,65 @@
 package com.example.urlshortenerapp;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.databinding.DataBindingUtil;
 
 import com.example.urlshortener.R;
-import com.example.urlshortenerapp.databinding.ActivityMainBinding;
 
-import java.util.Random;
+import org.json.JSONObject;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-
-    private ActivityMainBinding binding;
+    private EditText etOriginalUrl;
+    private TextView tvShortenedUrl;
+    private Button btnShorten, btnCopy;
+    private UrlRepository urlRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        EdgeToEdge.enable(this);
+        urlRepository = new UrlRepository(this);
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        binding.btnCopy.setOnClickListener(v -> copyToClipboard());
+        etOriginalUrl = findViewById(R.id.etOriginalUrl);
+        tvShortenedUrl = findViewById(R.id.tvShortenedUrl);
+        btnShorten = findViewById(R.id.btnShorten);
+        btnCopy = findViewById(R.id.btnCopy);
 
+        btnShorten.setOnClickListener(v -> shortenUrl());
+        btnCopy.setOnClickListener(v -> copyToClipboard());
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        Button btnHistory = findViewById(R.id.btnHistory);
+        btnHistory.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, HistoryActivity.class));
         });
 
-        binding.btnShorten.setOnClickListener(v -> shortenUrl());
     }
 
-    // Método para generar una URL corta aleatoria
     private void shortenUrl() {
-        String originalUrl = binding.etOriginalUrl.getText().toString();
+        String originalUrl = etOriginalUrl.getText().toString().trim();
 
         if (originalUrl.isEmpty()) {
-            Toast.makeText(this, "Por favor, ingrese una URL", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Por favor ingrese una URL", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!UserManager.getInstance().canCreateMoreUrls()) {
+            Toast.makeText(this, "Límite mensual alcanzado (5 URLs)", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -57,23 +67,27 @@ public class MainActivity extends AppCompatActivity {
         UrlShortenerApi api = RetrofitClient.getInstance().create(UrlShortenerApi.class);
         UrlShortenerApi.ShortenRequest request = new UrlShortenerApi.ShortenRequest(originalUrl, shortCode);
 
-        api.shortenUrl(request).enqueue(new retrofit2.Callback<ResponseBody>() {
+        api.shortenUrl(request).enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String responseBody = response.body().string();
-                        Log.d("RESPUESTA_BACKEND", responseBody);
+                        JSONObject json = new JSONObject(responseBody);
 
-                        org.json.JSONObject json = new org.json.JSONObject(responseBody);
-
-                        // Maneja ambos casos por si acaso
                         String shortUrl = json.has("shortUrl") ?
                                 json.getString("shortUrl") :
                                 RetrofitClient.BASE_URL + "/" + request.shortCode;
 
+
+                        ShortenedUrl urlEntity = new ShortenedUrl();
+                        urlEntity.originalUrl = originalUrl;
+                        urlEntity.shortUrl = shortUrl;
+                        urlEntity.timestamp = System.currentTimeMillis();
+                        urlRepository.insertUrl(urlEntity);
+
                         runOnUiThread(() -> {
-                            binding.tvShortenedUrl.setText("URL acortada: " + shortUrl);
+                            tvShortenedUrl.setText("URL acortada: " + shortUrl);
                             Toast.makeText(MainActivity.this, "URL acortada creada", Toast.LENGTH_SHORT).show();
                         });
 
@@ -82,9 +96,6 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() ->
                                 Toast.makeText(MainActivity.this, "Error al procesar respuesta", Toast.LENGTH_SHORT).show());
                     }
-                } else {
-                    runOnUiThread(() ->
-                            Toast.makeText(MainActivity.this, "Error del servidor", Toast.LENGTH_SHORT).show());
                 }
             }
 
@@ -96,32 +107,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-
-
-    // Método que genera un identificador aleatorio para la URL corta
-    private String generateShortenedUrl() {
-        String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder shortUrl = new StringBuilder("short.ly/");
-
-        Random random = new Random();
-        for (int i = 0; i < 6; i++) {
-            int index = random.nextInt(characters.length());
-            shortUrl.append(characters.charAt(index));
-        }
-
-        return shortUrl.toString();
-    }
-
     private void copyToClipboard() {
-        String textToCopy = binding.tvShortenedUrl.getText().toString().replace("URL acortada: ", "");
+        String textToCopy = tvShortenedUrl.getText().toString().replace("URL acortada: ", "");
         if (!textToCopy.isEmpty()) {
-            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            android.content.ClipData clip = android.content.ClipData.newPlainText("URL acortada", textToCopy);
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("URL acortada", textToCopy);
             clipboard.setPrimaryClip(clip);
             Toast.makeText(this, "URL copiada al portapapeles", Toast.LENGTH_SHORT).show();
         }
     }
-
-
 }
