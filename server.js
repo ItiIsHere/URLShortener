@@ -98,30 +98,6 @@ app.get('/:code', async (req, res) => {
     }
 });
 
-// Ruta de diagnóstico (recuerda eliminarla después)
-app.get('/debug/db', async (req, res) => {
-    try {
-      // Listar tablas existentes
-      const tables = await pool.query(`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public'
-      `);
-  
-      // Obtener datos de cada tabla
-      const users = await pool.query('SELECT * FROM users');
-      const urls = await pool.query('SELECT * FROM shortened_urls');
-  
-      res.json({
-        tables: tables.rows,
-        users: users.rows,
-        urls: urls.rows
-      });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
 // Iniciar el servidor
 app.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${port}`);
