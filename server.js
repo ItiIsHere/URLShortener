@@ -38,34 +38,13 @@ async function initDB() {
     console.log("Tablas de DB inicializadas correctamente");
   } catch (err) {
     console.error("Error al inicializar DB:", err);
-    throw err; // Relanzar el error para manejo adicional si es necesario
+    throw err;
   }
 }
 
 // Middlewares
 app.use(cors());
 app.use(bodyParser.json());
-
-async function startServer() {
-    try {
-      await initDB();
-      app.listen(port, () => {
-        console.log(`Servidor corriendo en http://localhost:${port}`);
-      });
-    } catch (err) {
-      console.error("No se pudo iniciar el servidor:", err);
-      process.exit(1); 
-    }
-  }
-
-startServer();
-
-// Inicializar la base de datos al iniciar
-initDB().then(() => {
-  console.log("Base de datos lista");
-}).catch(err => {
-  console.error("Error crítico al inicializar DB:", err);
-});
 
 // Ruta para acortar la URL
 app.post('/shorten', async (req, res) => {
@@ -76,10 +55,8 @@ app.post('/shorten', async (req, res) => {
   }
 
   try {
-    // Verificar usuario
     const { uid } = await admin.auth().verifyIdToken(token);
 
-    // Guardar en PostgreSQL
     await pool.query(
       `INSERT INTO shortened_urls (short_code, original_url, user_uid)
        VALUES ($1, $2, $3)`,
@@ -88,7 +65,7 @@ app.post('/shorten', async (req, res) => {
 
     res.json({ 
       message: 'URL acortada guardada exitosamente',
-      shortUrl: `https://urlshortener-production-3cf7.up.railway.app${shortCode}`
+      shortUrl: `https://urlshortener-production-3cf7.up.railway.app/${shortCode}`
     });
   } catch (error) {
     console.error("Error al acortar URL:", error);
@@ -134,7 +111,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-// Iniciar el servidor
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
-});
+// Iniciar servidor
+async function startServer() {
+  try {
+    await initDB();
+    app.listen(port, () => {
+      console.log(`Servidor corriendo en http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error("No se pudo iniciar el servidor:", err);
+    process.exit(1);
+  }
+}
+
+startServer();
