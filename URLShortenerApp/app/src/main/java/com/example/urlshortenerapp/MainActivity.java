@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Inicialización de vistas
         urlRepository = new UrlRepository(this);
         etOriginalUrl = findViewById(R.id.etOriginalUrl);
         tvShortenedUrl = findViewById(R.id.tvShortenedUrl);
@@ -40,13 +39,11 @@ public class MainActivity extends AppCompatActivity {
         btnHistory = findViewById(R.id.btnHistory);
         btnUpgrade = findViewById(R.id.btnUpgrade);
 
-        // Configurar listeners
         btnShorten.setOnClickListener(v -> shortenUrl());
         btnCopy.setOnClickListener(v -> copyToClipboard());
         btnHistory.setOnClickListener(v -> startActivity(new Intent(this, HistoryActivity.class)));
         btnUpgrade.setOnClickListener(v -> startActivity(new Intent(this, UpgradeActivity.class)));
 
-        // Actualizar estado inicial
         updateUserStatusUI();
     }
 
@@ -100,14 +97,13 @@ public class MainActivity extends AppCompatActivity {
                                 json.getString("shortUrl") :
                                 RetrofitClient.BASE_URL + "/" + request.shortCode;
 
-                        // Guardar en base de datos
+                        // base de datos
                         ShortenedUrl urlEntity = new ShortenedUrl();
                         urlEntity.originalUrl = originalUrl;
                         urlEntity.shortUrl = shortUrl;
                         urlEntity.timestamp = System.currentTimeMillis();
                         urlRepository.insertUrl(urlEntity);
 
-                        // Actualizar UI
                         runOnUiThread(() -> {
                             tvShortenedUrl.setText("URL acortada: " + shortUrl);
                             userManager.incrementUrlCount();

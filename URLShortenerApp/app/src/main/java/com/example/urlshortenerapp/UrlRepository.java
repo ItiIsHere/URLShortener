@@ -4,24 +4,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
-
-import com.example.urlshortenerapp.ShortenedUrlDao;
-import com.example.urlshortenerapp.AppDatabase;
-import com.example.urlshortenerapp.ShortenedUrl;
-
 import java.util.List;
-
-import android.content.Context;
-import android.os.AsyncTask;
-
-import androidx.lifecycle.LiveData;
 import androidx.room.Query;
-
-import com.example.urlshortenerapp.ShortenedUrlDao;
-import com.example.urlshortenerapp.AppDatabase;
-import com.example.urlshortenerapp.ShortenedUrl;
-
-import java.util.List;
 
 public class UrlRepository {
     private ShortenedUrlDao shortenedUrlDao;
