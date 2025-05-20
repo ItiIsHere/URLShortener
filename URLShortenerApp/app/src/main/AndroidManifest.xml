@@ -16,16 +16,23 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
 
+        <!-- NUEVO: LoginActivity ahora es la principal -->
         <activity
-            android:name="com.example.urlshortenerapp.MainActivity"
-            android:label="URLShortener"
+            android:name="com.example.urlshortenerapp.LoginActivity"
             android:exported="true"
-            android:usesCleartextTraffic="true">
+            android:theme="@style/Theme.URLShortenerApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- MainActivity ya no es LAUNCHER -->
+        <activity
+            android:name="com.example.urlshortenerapp.MainActivity"
+            android:label="URLShortener"
+            android:exported="false"
+            android:usesCleartextTraffic="true" />
 
         <activity
             android:name="com.example.urlshortenerapp.HistoryActivity"
@@ -37,6 +44,10 @@
             android:label="Hacerse Premium"
             android:exported="false" />
 
+        <!-- META-DATA para Google Sign-In (asegúrate de tener este string en strings.xml) -->
+        <meta-data
+            android:name="com.google.android.gms.client_id"
+            android:value="@string/default_web_client_id" />
 
     </application>
 
